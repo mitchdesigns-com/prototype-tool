@@ -87,6 +87,10 @@ export function Presenter(props: PresenterProps) {
     connected.current = false;
     setBridgeMissing(false);
   }, [src, frame.key]);
+  // Turning comments on is exactly when the "add this line" card is needed, even if it was closed before.
+  useEffect(() => {
+    if (commentMode) setSnippetDismissed(false);
+  }, [commentMode]);
 
   // --- Layout -------------------------------------------------------------
 
