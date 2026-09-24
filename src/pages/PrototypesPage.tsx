@@ -6,7 +6,7 @@ import { NewPrototypeDialog } from '../components/NewPrototypeDialog';
 import { Button, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { cn, timeAgo } from '../lib/format';
-import { DEMO, faviconUrl, shareUrl } from '../lib/runtime';
+import { faviconUrl, shareUrl } from '../lib/runtime';
 
 export function PrototypesPage() {
   const navigate = useNavigate();
@@ -34,7 +34,6 @@ export function PrototypesPage() {
         )}
       </div>
 
-      {DEMO && <DemoNotice />}
       {error && <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
       {!projects && !error && (
         <div className="grid place-items-center py-24 text-muted-foreground"><Spinner /></div>
@@ -178,25 +177,6 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <Button variant="brand" className="mt-5" onClick={onCreate}>
         <Plus className="size-4" /> New prototype
       </Button>
-    </div>
-  );
-}
-
-function DemoNotice() {
-  async function reset() {
-    if (!confirm('Reset the demo to its sample projects and comments?')) return;
-    (await import('../lib/demo')).resetDemo();
-    location.reload();
-  }
-  return (
-    <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-brand/50 bg-brand/10 px-4 py-3 text-sm">
-      <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-foreground">Demo</span>
-      <span className="text-foreground/80">
-        Prototypes load the link you add. For pinned comments, the site needs one script line (the prototype shows it). Comments are saved in your browser only, and the link isn’t masked here. The full version handles both with its preview server.
-      </span>
-      <button onClick={reset} className="ml-auto text-xs font-semibold text-foreground/70 underline-offset-2 hover:text-foreground hover:underline">
-        Reset demo
-      </button>
     </div>
   );
 }

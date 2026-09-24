@@ -8,7 +8,7 @@ import type { Anchor, CommentThread, Device, ProjectAdmin, ProjectPublic, Reply,
 // v2: demo content switched from the bundled sample site to the Mitch Designs staging site.
 const KEY = 'bbp_demo_v2';
 
-/** What the seeded projects (and Reset demo) preview. */
+/** What the seeded sample projects preview. */
 export const DEMO_SITE_URL = 'https://mitchdesigns-website.mitchdesigns.workers.dev/';
 
 interface DemoProject extends Omit<ProjectAdmin, 'openComments' | 'totalComments' | 'previewUrl'> {
@@ -328,11 +328,4 @@ export async function demoApi<T>(path: string, opts: { method?: string; body?: u
     }
   }
   throw new DemoError(404, 'Not found');
-}
-
-/** Resets the demo to its sample projects and comments. */
-export function resetDemo() {
-  store = seed();
-  write(store);
-  store.projects.forEach((p) => notify(p.id));
 }
