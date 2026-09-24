@@ -51,7 +51,6 @@ export function SharePage() {
         viewer={viewer}
         name={project.name}
         defaultDevice={project.device}
-        allowComments={project.allowComments}
         lockedDevice={project.lockDevice ? project.device : undefined}
         siteUrl={project.previewUrl}
         left={
@@ -127,7 +126,7 @@ function Welcome({ project, onEnter }: { project: ProjectPublic; onEnter: (name:
             className="h-11 w-full rounded-lg border border-white/10 bg-black/25 px-3.5 text-[15px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand/70"
           />
           <span className="mt-1.5 block text-xs text-white/40">
-            {project.allowComments ? 'Shown next to your comments so the team knows who said what.' : 'So the team knows who viewed the prototype.'}
+            Shown next to your comments so the team knows who said what.
           </span>
         </label>
 

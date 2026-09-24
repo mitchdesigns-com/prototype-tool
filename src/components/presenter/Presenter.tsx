@@ -16,7 +16,6 @@ export interface PresenterProps {
   isAdmin: boolean;
   name: string;
   defaultDevice: Device;
-  allowComments: boolean;
   /** Left of the top bar (back button, project name). */
   left: ReactNode;
   /** Right of the top bar (admin share/settings). */
@@ -51,7 +50,7 @@ type BridgeMsg =
 const STAGE_PAD = 40;
 
 export function Presenter(props: PresenterProps) {
-  const { token, proxyOrigin, previewKey, isAdmin, allowComments } = props;
+  const { token, proxyOrigin, previewKey, isAdmin } = props;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const ownViewer = useIdentity();
@@ -61,7 +60,7 @@ export function Presenter(props: PresenterProps) {
   const [zoom, setZoom] = useState<Zoom>('fit');
   const [stage, setStage] = useState({ w: 0, h: 0 });
   const [commentMode, setCommentMode] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(() => allowComments && window.innerWidth >= 1100);
+  const [panelOpen, setPanelOpen] = useState(() => window.innerWidth >= 1100);
   const [allComments, setComments] = useState<CommentThread[]>([]);
   const [page, setPage] = useState<{ path: string; title: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -167,7 +166,7 @@ export function Presenter(props: PresenterProps) {
       if (draft) setDraft(null);
       else if (activeId) setActiveId(null);
       else if (commentMode) setCommentMode(false);
-    } else if (key.toLowerCase() === 'c' && allowComments) {
+    } else if (key.toLowerCase() === 'c') {
       setCommentMode((v) => !v);
       setDraft(null);
     }
@@ -196,7 +195,7 @@ export function Presenter(props: PresenterProps) {
         setPage((p) => (p ? { ...p, title: d.title } : p));
         break;
       case 'place':
-        if (!allowComments || !page) return;
+        if (!page) return;
         setActiveId(null);
         setDraft({ anchor: d.anchor, path: page.path, device });
         break;
@@ -397,23 +396,19 @@ export function Presenter(props: PresenterProps) {
           <IconButton label="Reload preview" onClick={reload} className="max-sm:hidden">
             <RotateCw className="size-4" />
           </IconButton>
-          {allowComments && (
-            <>
-              <IconButton
-                label="Comment (C)"
-                active={commentMode}
-                onClick={() => {
-                  setCommentMode((v) => !v);
-                  setDraft(null);
-                }}
-              >
-                <MessageCirclePlus className="size-[18px]" />
-              </IconButton>
-              <IconButton label="Comments panel" active={panelOpen} onClick={() => setPanelOpen((v) => !v)} badge={comments.filter((c) => !c.resolved).length}>
-                <MessagesSquare className="size-[18px]" />
-              </IconButton>
-            </>
-          )}
+          <IconButton
+            label="Comment (C)"
+            active={commentMode}
+            onClick={() => {
+              setCommentMode((v) => !v);
+              setDraft(null);
+            }}
+          >
+            <MessageCirclePlus className="size-[18px]" />
+          </IconButton>
+          <IconButton label="Comments panel" active={panelOpen} onClick={() => setPanelOpen((v) => !v)} badge={comments.filter((c) => !c.resolved).length}>
+            <MessagesSquare className="size-[18px]" />
+          </IconButton>
           {props.right}
         </div>
       </header>
@@ -479,7 +474,7 @@ export function Presenter(props: PresenterProps) {
         </div>
 
         {/* Comments column */}
-        {allowComments && panelOpen && (
+        {panelOpen && (
           <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[340px] animate-slide-in border-l border-line shadow-2xl md:static md:w-[320px] md:flex-none md:shadow-none">
             <CommentsPanel
               comments={comments}
@@ -492,7 +487,6 @@ export function Presenter(props: PresenterProps) {
               activeId={activeId}
               onSelect={focusComment}
               onClose={() => setPanelOpen(false)}
-              canComment={allowComments}
               onStartComment={() => setCommentMode(true)}
             />
           </div>
@@ -509,7 +503,6 @@ export function Presenter(props: PresenterProps) {
           thread={active}
           myId={identity.id}
           isAdmin={isAdmin}
-          canComment={allowComments}
           needsName={needsName}
           onReply={reply}
           onResolve={resolve}

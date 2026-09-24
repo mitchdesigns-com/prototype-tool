@@ -53,7 +53,6 @@ export function AdminPresenterPage({ config }: { config: AppConfig }) {
         isAdmin
         name={project.name}
         defaultDevice={project.device}
-        allowComments={project.allowComments}
         lockedDevice={project.lockDevice ? project.device : undefined}
         siteUrl={project.previewUrl}
         left={
@@ -145,7 +144,6 @@ function SharePopover({ project, update, setProject, onClose }: {
 
       <div className="mt-4 space-y-3 border-t pt-4">
         <Row label="Anyone with the link can view" checked={project.shareEnabled} onChange={(v) => update({ shareEnabled: v })} />
-        <Row label="Viewers can comment" checked={project.allowComments} onChange={(v) => update({ allowComments: v })} />
       </div>
 
       <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">

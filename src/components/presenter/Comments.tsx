@@ -153,12 +153,11 @@ export function DraftCard({ point, needsName, onSubmit, onCancel }: {
   );
 }
 
-export function ThreadCard({ point, thread, myId, isAdmin, canComment, needsName, onReply, onResolve, onDelete, onDeleteReply, onClose }: {
+export function ThreadCard({ point, thread, myId, isAdmin, needsName, onReply, onResolve, onDelete, onDeleteReply, onClose }: {
   point: { x: number; y: number };
   thread: CommentThread;
   myId: string;
   isAdmin: boolean;
-  canComment: boolean;
   needsName: boolean;
   onReply: (text: string, name?: string) => Promise<void>;
   onResolve: (resolved: boolean) => void;
@@ -219,11 +218,9 @@ export function ThreadCard({ point, thread, myId, isAdmin, canComment, needsName
           />
         ))}
       </div>
-      {canComment && (
-        <div className="border-t border-neutral-100">
-          <Composer placeholder="Reply" needsName={needsName} onSubmit={onReply} onCancel={onClose} submitLabel="Reply" />
-        </div>
-      )}
+      <div className="border-t border-neutral-100">
+        <Composer placeholder="Reply" needsName={needsName} onSubmit={onReply} onCancel={onClose} submitLabel="Reply" />
+      </div>
     </Floating>
   );
 }
@@ -251,7 +248,7 @@ function Message({ name, seed, team, at, text, onDelete }: { name: string; seed:
 
 export type Scope = 'page' | 'all';
 
-export function CommentsPanel({ comments, currentPath, device, scope, setScope, showResolved, setShowResolved, activeId, onSelect, onClose, canComment, onStartComment }: {
+export function CommentsPanel({ comments, currentPath, device, scope, setScope, showResolved, setShowResolved, activeId, onSelect, onClose, onStartComment }: {
   comments: CommentThread[];
   currentPath: string | null;
   device: CommentThread['device'];
@@ -262,7 +259,6 @@ export function CommentsPanel({ comments, currentPath, device, scope, setScope, 
   activeId: string | null;
   onSelect: (c: CommentThread) => void;
   onClose: () => void;
-  canComment: boolean;
   onStartComment: () => void;
 }) {
   const onPage = (c: CommentThread) => currentPath !== null && samePath(c.path, currentPath) && c.device === device;
@@ -305,12 +301,10 @@ export function CommentsPanel({ comments, currentPath, device, scope, setScope, 
               <MessageCircle className="size-5" />
             </span>
             <p className="text-sm font-semibold text-white/85">{scope === 'page' ? 'No comments on this page' : 'No comments yet'}</p>
-            {canComment && (
-              <p className="mt-1 text-xs leading-relaxed text-white/50">
-                Press <kbd className="rounded bg-white/10 px-1 font-sans">C</kbd> or{' '}
-                <button onClick={onStartComment} className="font-semibold text-brand hover:underline">start commenting</button>, then click a spot or drag over an area.
-              </p>
-            )}
+            <p className="mt-1 text-xs leading-relaxed text-white/50">
+              Press <kbd className="rounded bg-white/10 px-1 font-sans">C</kbd> or{' '}
+              <button onClick={onStartComment} className="font-semibold text-brand hover:underline">start commenting</button>, then click a spot or drag over an area.
+            </p>
           </li>
         )}
         {list.map((c) => {

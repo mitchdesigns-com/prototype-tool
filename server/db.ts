@@ -13,7 +13,6 @@ export interface Project {
   device: Device;
   shareToken: string;
   shareEnabled: boolean;
-  allowComments: boolean;
   lockDevice?: boolean;
   createdAt: string;
   updatedAt: string;

@@ -56,14 +56,14 @@ function counts(projectId: string) {
 }
 
 function toAdmin(p: Project): ProjectAdmin {
-  const { nextNumber: _n, ...rest } = p;
+  // `allowComments` may linger in older data: comments are now always on, so it's dropped.
+  const { nextNumber: _n, allowComments: _c, ...rest } = p as Project & { allowComments?: boolean };
   return { ...rest, lockDevice: !!p.lockDevice, ...counts(p.id), previewKey: previewKeyFor(p.shareToken) };
 }
 
 const toPublic = (p: Project): ProjectPublic => ({
   name: p.name,
   device: p.device,
-  allowComments: p.allowComments,
   lockDevice: !!p.lockDevice,
 });
 
@@ -194,7 +194,6 @@ export function createApi() {
       device,
       shareToken: newId(12),
       shareEnabled: true,
-      allowComments: true,
       lockDevice: req.body?.lockDevice === true,
       createdAt: now(),
       updatedAt: now(),
@@ -219,7 +218,6 @@ export function createApi() {
     }
     if (isDevice(b.device)) p.device = b.device;
     if (typeof b.shareEnabled === 'boolean') p.shareEnabled = b.shareEnabled;
-    if (typeof b.allowComments === 'boolean') p.allowComments = b.allowComments;
     if (typeof b.lockDevice === 'boolean') p.lockDevice = b.lockDevice;
     let reachable: boolean | undefined;
     if (b.url !== undefined && str(b.url, 2000) !== p.url) {
@@ -289,7 +287,6 @@ export function createApi() {
 
   r.post('/share/:token/comments', (req, res) => {
     const p = shareProject(req);
-    if (!p.allowComments) throw new HttpError(403, 'Comments are turned off for this prototype');
     const text = str(req.body?.text, 4000);
     if (!text) throw new HttpError(400, 'Write a comment first');
     const c: StoredComment = {
@@ -314,7 +311,6 @@ export function createApi() {
 
   r.post('/share/:token/comments/:cid/replies', (req, res) => {
     const p = shareProject(req);
-    if (!p.allowComments) throw new HttpError(403, 'Comments are turned off for this prototype');
     const c = findComment(p, req.params.cid as string);
     const text = str(req.body?.text, 4000);
     if (!text) throw new HttpError(400, 'Write a reply first');

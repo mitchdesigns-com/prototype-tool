@@ -56,7 +56,6 @@ export interface ProjectAdmin {
   device: Device;
   shareToken: string;
   shareEnabled: boolean;
-  allowComments: boolean;
   /** Viewers only get `device`; the Desktop/Mobile switch is hidden from them. */
   lockDevice: boolean;
   /** Static demo only: what the mockup loads (the link itself, or the bundled sample site). */
@@ -72,7 +71,6 @@ export interface ProjectAdmin {
 export interface ProjectPublic {
   name: string;
   device: Device;
-  allowComments: boolean;
   lockDevice: boolean;
   /** Static demo only — the real app never sends the link to viewers. */
   previewUrl?: string;

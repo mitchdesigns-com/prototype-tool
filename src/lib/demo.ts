@@ -46,7 +46,6 @@ function seed(): Store {
     targetOrigin: site.origin,
     startPath: site.pathname,
     shareEnabled: true,
-    allowComments: true,
     lockDevice: false,
     createdAt: ago(30),
     updatedAt: ago(1),
@@ -162,7 +161,7 @@ const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice
 const isDevice = (v: unknown): v is Device => v === 'desktop' || v === 'mobile';
 
 function toAdmin(p: DemoProject): ProjectAdmin {
-  const { nextNumber: _n, ...rest } = p;
+  const { nextNumber: _n, allowComments: _c, ...rest } = p as DemoProject & { allowComments?: boolean };
   const cs = store.comments.filter((c) => c.projectId === p.id);
   return { ...rest, previewUrl: p.url, openComments: cs.filter((c) => !c.resolved).length, totalComments: cs.length };
 }
@@ -170,7 +169,6 @@ function toAdmin(p: DemoProject): ProjectAdmin {
 const toPublic = (p: DemoProject): ProjectPublic => ({
   name: p.name,
   device: p.device,
-  allowComments: p.allowComments,
   lockDevice: p.lockDevice,
   previewUrl: p.url,
 });
@@ -236,7 +234,7 @@ export async function demoApi<T>(path: string, opts: { method?: string; body?: u
     const p: DemoProject = {
       id: id(), name, url: u.toString(), targetOrigin: u.origin, startPath: u.pathname,
       device: isDevice(b.device) ? b.device : 'desktop', shareToken: id() + id(), shareEnabled: true,
-      allowComments: true, lockDevice: b.lockDevice === true, createdAt: now, updatedAt: now, previewKey: 'demo', nextNumber: 1,
+      lockDevice: b.lockDevice === true, createdAt: now, updatedAt: now, previewKey: 'demo', nextNumber: 1,
     };
     store.projects.push(p);
     commit();
@@ -258,7 +256,7 @@ export async function demoApi<T>(path: string, opts: { method?: string; body?: u
         p.name = name;
       }
       if (isDevice(b.device)) p.device = b.device;
-      for (const k of ['shareEnabled', 'allowComments', 'lockDevice'] as const) if (typeof b[k] === 'boolean') p[k] = b[k] as boolean;
+      for (const k of ['shareEnabled', 'lockDevice'] as const) if (typeof b[k] === 'boolean') p[k] = b[k] as boolean;
       if (b.url !== undefined && str(b.url, 2000) !== p.url) {
         const u = url(b.url);
         Object.assign(p, { url: u.toString(), targetOrigin: u.origin, startPath: u.pathname });
@@ -278,7 +276,6 @@ export async function demoApi<T>(path: string, opts: { method?: string; body?: u
   if ((r = m(/^\/share\/([^/]+)\/comments$/))) {
     const p = share(r[1], admin);
     if (method === 'GET') return out(threads(p.id));
-    if (!p.allowComments) throw new DemoError(403, 'Comments are turned off for this prototype');
     const text = str(b.text, 4000);
     if (!text) throw new DemoError(400, 'Write a comment first');
     const c: DemoComment = {
