@@ -4,7 +4,7 @@ import { DEVICES, type Anchor, type CommentThread, type Device, type Reply } fro
 import { api } from '../../lib/api';
 import { cn, samePath } from '../../lib/format';
 import { useIdentity, type Viewer } from '../../lib/identity';
-import { previewSrc, subscribeComments } from '../../lib/runtime';
+import { BRIDGE_SNIPPET, DEMO, previewSrc, subscribeComments } from '../../lib/runtime';
 import { CommentsPanel, DraftCard, ThreadCard, type Scope } from './Comments';
 import { DeviceFrame, frameSize } from './DeviceFrame';
 
@@ -23,6 +23,8 @@ export interface PresenterProps {
   right?: ReactNode;
   /** "Show only the selected device": viewers get no Desktop/Mobile switch; admins see the other one dimmed. */
   lockedDevice?: Device;
+  /** Static demo only: the site to load directly (there's no preview proxy on GitHub Pages). */
+  siteUrl?: string;
   /** Commenter identity from the parent (share page asks for the name up front). */
   viewer?: Viewer;
 }
@@ -72,7 +74,19 @@ export function Presenter(props: PresenterProps) {
   const [, forceRender] = useState(0);
   const pendingScroll = useRef<string | null>(null);
 
-  const src = previewSrc({ proxyOrigin, token, previewKey, path: frame.path });
+  const src = previewSrc({ proxyOrigin, token, previewKey, path: frame.path, siteUrl: props.siteUrl });
+  // Messages are only exchanged with whatever origin the frame loads (the preview proxy, or the site itself in the demo).
+  const frameOrigin = new URL(src, location.href).origin;
+
+  // The comment bridge announces itself on load. Without it (a site that doesn't include the script,
+  // or one that refuses to be embedded) the page can still be viewed but not commented on.
+  const connected = useRef(false);
+  const [bridgeMissing, setBridgeMissing] = useState(false);
+  const [snippetDismissed, setSnippetDismissed] = useState(false);
+  useEffect(() => {
+    connected.current = false;
+    setBridgeMissing(false);
+  }, [src, frame.key]);
 
   // --- Layout -------------------------------------------------------------
 
@@ -108,8 +122,8 @@ export function Presenter(props: PresenterProps) {
   // --- Bridge messaging -------------------------------------------------
 
   const send = useCallback(
-    (msg: Record<string, unknown>) => iframeRef.current?.contentWindow?.postMessage({ src: 'bbp-host', ...msg }, proxyOrigin),
-    [proxyOrigin],
+    (msg: Record<string, unknown>) => iframeRef.current?.contentWindow?.postMessage({ src: 'bbp-host', ...msg }, frameOrigin),
+    [frameOrigin],
   );
 
   const pinsVisible = commentMode || panelOpen;
@@ -161,6 +175,8 @@ export function Presenter(props: PresenterProps) {
       case 'ready':
       case 'route': {
         setLoaded(true);
+        connected.current = true;
+        setBridgeMissing(false);
         const pathChanged = !page || !samePath(page.path, d.path);
         setPage({ path: d.path, title: d.title });
         if (pendingScroll.current) {
@@ -195,12 +211,12 @@ export function Presenter(props: PresenterProps) {
 
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
-      if (e.source !== iframeRef.current?.contentWindow || e.origin !== proxyOrigin) return;
+      if (e.source !== iframeRef.current?.contentWindow || e.origin !== frameOrigin) return;
       if (e.data?.src === 'bbp') onBridge.current(e.data);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [proxyOrigin]);
+  }, [frameOrigin]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -418,6 +434,7 @@ export function Presenter(props: PresenterProps) {
                     onLoad={() => {
                       setLoaded(true);
                       send({ type: 'hello' });
+                      setTimeout(() => !connected.current && setBridgeMissing(true), 3500);
                     }}
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
                     allow="fullscreen; clipboard-write; autoplay"
@@ -441,9 +458,19 @@ export function Presenter(props: PresenterProps) {
           {commentMode && !draft && (
             <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-4">
               <div className="animate-pop-in rounded-full bg-black/75 px-3.5 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur">
-                Click to comment, or drag to select an area · <kbd className="font-sans text-white/60">Esc</kbd> to exit
+                {bridgeMissing ? (
+                  'Comments aren’t available on this page yet'
+                ) : (
+                  <>
+                    Click to comment, or drag to select an area · <kbd className="font-sans text-white/60">Esc</kbd> to exit
+                  </>
+                )}
               </div>
             </div>
+          )}
+
+          {DEMO && isAdmin && bridgeMissing && !snippetDismissed && (
+            <BridgeSnippet onDismiss={() => setSnippetDismissed(true)} />
           )}
         </div>
 
@@ -518,5 +545,37 @@ export function IconButton({ label, onClick, active, badge, className, children 
         </span>
       )}
     </button>
+  );
+}
+
+/** Static demo only: shown to admins when the previewed site doesn't include the comment script. */
+function BridgeSnippet({ onDismiss }: { onDismiss: () => void }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    await navigator.clipboard.writeText(BRIDGE_SNIPPET);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+  return (
+    <div className="absolute inset-x-3 bottom-3 z-20 mx-auto max-w-xl animate-pop-in rounded-xl border border-line bg-panel p-4 text-white shadow-2xl">
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">Turn on comments for this site</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/60">
+            Add this line inside the site’s <code className="text-white/80">&lt;head&gt;</code> and redeploy it. It does nothing for normal visitors and
+            only wakes up inside the prototype. If the page stays blank, the site is blocking embedding.
+          </p>
+        </div>
+        <button onClick={onDismiss} aria-label="Dismiss" className="-mr-1 -mt-1 grid size-7 flex-none place-items-center rounded-md text-white/50 hover:bg-white/10 hover:text-white">
+          ×
+        </button>
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <code className="min-w-0 flex-1 truncate rounded-lg bg-black/40 px-3 py-2 font-mono text-[11px] text-brand">{BRIDGE_SNIPPET}</code>
+        <button onClick={copy} className="h-8 flex-none rounded-lg bg-brand px-3 text-xs font-bold text-brand-foreground hover:brightness-95">
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+    </div>
   );
 }

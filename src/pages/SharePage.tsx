@@ -53,6 +53,7 @@ export function SharePage() {
         defaultDevice={project.device}
         allowComments={project.allowComments}
         lockedDevice={project.lockDevice ? project.device : undefined}
+        siteUrl={project.previewUrl}
         left={
           <>
             <BrandMark className="size-7 text-[13px]" />

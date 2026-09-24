@@ -46,7 +46,7 @@ export function AdminPresenterPage({ config }: { config: AppConfig }) {
     <div className="relative h-full">
       <Presenter
         // Remount when the share token or target changes so the preview reloads.
-        key={`${project.shareToken}|${project.targetOrigin}|${project.startPath}|${project.device}|${project.lockDevice}`}
+        key={`${project.shareToken}|${project.url}|${project.device}|${project.lockDevice}`}
         token={project.shareToken}
         previewKey={project.previewKey}
         proxyOrigin={config.proxyOrigin}
@@ -55,6 +55,7 @@ export function AdminPresenterPage({ config }: { config: AppConfig }) {
         defaultDevice={project.device}
         allowComments={project.allowComments}
         lockedDevice={project.lockDevice ? project.device : undefined}
+        siteUrl={project.previewUrl}
         left={
           <>
             <Link to="/prototype" aria-label="Back to prototypes" className="grid size-9 flex-none place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">

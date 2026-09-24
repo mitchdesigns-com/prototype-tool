@@ -18,14 +18,14 @@ export default defineConfig({
   },
 });
 
-/** Copies the sample website (+ the comment bridge it loads) into the demo build. */
+/** Publishes the comment bridge with the demo so real sites can include it. */
 function demoSite(): Plugin {
   return {
-    name: 'demo-site',
+    name: 'demo-bridge',
     apply: 'build',
     closeBundle() {
-      fs.cpSync('demo/site', 'dist-demo/demo-site', { recursive: true });
-      fs.copyFileSync('server/bridge.js', 'dist-demo/demo-site/bridge.js');
+      // Public copy real sites can include (<script src=".../bridge.js">) so comments work without the proxy.
+      fs.copyFileSync('server/bridge.js', 'dist-demo/bridge.js');
       fs.writeFileSync('dist-demo/.nojekyll', '');
     },
   };

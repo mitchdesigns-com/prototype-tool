@@ -8,7 +8,8 @@ A **Prototype** workspace for Backbone. Share a live website (the one you're bui
 
 The demo is a static build that runs entirely in the browser, so it can live on GitHub Pages:
 
-- Every prototype previews a bundled sample site (`demo/site`) instead of a real link, since there's no preview server.
+- Each prototype loads its link directly (no preview server to mask it). The sample projects use the Mitch Designs staging site.
+- Pinned comments need the previewed site to include one line: `<script src="https://markelmallakh.github.io/prototype-tool/bridge.js"></script>` (the prototype shows it to admins when it's missing). The full version injects this automatically.
 - Projects and comments are saved in each visitor's browser (localStorage), so teammates don't see each other's comments. **Reset demo** on the list page restores the sample data.
 - Share links use `#/p/<token>` routes.
 

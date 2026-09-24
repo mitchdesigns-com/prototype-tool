@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { EyeOff } from 'lucide-react';
 import type { Device, ProjectAdmin } from '../../shared/types';
 import { api } from '../lib/api';
+import { DEMO } from '../lib/runtime';
 import { DeviceLock, DevicePicker } from './DevicePicker';
 import { Button, Dialog, Field, Input, Spinner } from './ui';
 
@@ -46,7 +47,9 @@ export function NewPrototypeDialog({ open, onClose, onCreated }: {
           hint={
             <span className="inline-flex items-start gap-1.5">
               <EyeOff className="mt-px size-3.5 flex-none" />
-              Only admins can see this. Viewers get a masked preview link and never see the real address.
+              {DEMO
+                ? 'Loads directly in this demo. The full version masks it so viewers never see the real address.'
+                : 'Only admins can see this. Viewers get a masked preview link and never see the real address.'}
             </span>
           }
         >

@@ -5,10 +5,13 @@ import type { Anchor, CommentThread, Device, ProjectAdmin, ProjectPublic, Reply,
  * Same endpoints and shapes; data is kept in this browser's localStorage.
  */
 
-const KEY = 'bbp_demo_v1';
-const SITE_PATH = `${import.meta.env.BASE_URL}demo-site/`;
+// v2: demo content switched from the bundled sample site to the Mitch Designs staging site.
+const KEY = 'bbp_demo_v2';
 
-interface DemoProject extends Omit<ProjectAdmin, 'openComments' | 'totalComments'> {
+/** What the seeded projects (and Reset demo) preview. */
+export const DEMO_SITE_URL = 'https://mitchdesigns-website.mitchdesigns.workers.dev/';
+
+interface DemoProject extends Omit<ProjectAdmin, 'openComments' | 'totalComments' | 'previewUrl'> {
   nextNumber: number;
 }
 type DemoReply = Reply & { secret?: string };
@@ -37,11 +40,11 @@ const ago = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOStri
 const id = () => Math.random().toString(36).slice(2, 10);
 
 function seed(): Store {
-  const home = `${SITE_PATH}index.html`;
-  const story = `${SITE_PATH}story.html`;
-  const project = (p: Partial<DemoProject> & Pick<DemoProject, 'id' | 'name' | 'url' | 'device' | 'shareToken'>): DemoProject => ({
-    targetOrigin: new URL(p.url).origin,
-    startPath: '/',
+  const site = new URL(DEMO_SITE_URL);
+  const project = (p: Partial<DemoProject> & Pick<DemoProject, 'id' | 'name' | 'device' | 'shareToken'>): DemoProject => ({
+    url: site.href,
+    targetOrigin: site.origin,
+    startPath: site.pathname,
     shareEnabled: true,
     allowComments: true,
     lockDevice: false,
@@ -51,41 +54,40 @@ function seed(): Store {
     nextNumber: 1,
     ...p,
   });
-  const comment = (c: Omit<DemoComment, 'id' | 'resolvedBy' | 'replies'> & { replies?: DemoReply[]; resolvedBy?: string | null }): DemoComment => ({
+  const comment = (c: Omit<DemoComment, 'id' | 'resolvedBy' | 'replies' | 'path' | 'pageTitle'> & { replies?: DemoReply[] }): DemoComment => ({
     id: id(),
+    path: '/',
+    pageTitle: 'MitchDesigns — Website & Mobile App Design Agency in Egypt',
     resolvedBy: null,
     replies: [],
     ...c,
   });
   const client = { author: 'Sarah (Client)', authorId: 'demo-sarah', role: 'guest' as Role };
   const team = { author: 'Mark — Mitch Designs', authorId: 'demo-mark', role: 'team' as Role };
+  // The hero headline block on the staging site (captured with the comment tool).
+  const hero = '#main>section:nth-of-type(1)>div:nth-of-type(4)';
 
   return {
     projects: [
-      project({ id: 'nile-web', name: 'Nile Coffee — Website redesign', url: 'https://staging.nilecoffee.co', device: 'desktop', shareToken: 'nile-web-demo', nextNumber: 4 }),
-      project({ id: 'nile-app', name: 'Nile Coffee — Ordering flow', url: 'https://preview.nilecoffee.co/order', device: 'mobile', lockDevice: true, shareToken: 'nile-app-demo', nextNumber: 2, updatedAt: ago(5) }),
+      project({ id: 'md-web', name: 'Mitch Designs — Website', device: 'desktop', shareToken: 'md-web-demo', nextNumber: 3 }),
+      project({ id: 'md-mobile', name: 'Mitch Designs — Mobile', device: 'mobile', lockDevice: true, shareToken: 'md-mobile-demo', nextNumber: 2, updatedAt: ago(5) }),
     ],
     comments: [
       comment({
-        projectId: 'nile-web', number: 1, path: home, pageTitle: 'Nile Coffee — Slow coffee, Cairo', device: 'desktop',
-        anchor: { x: 0, y: 0, vw: 1512, selector: '#hero-title', ox: 60, oy: 30 },
-        ...client, text: 'Love this headline! Could we try the second line in our brand green?', createdAt: ago(20), resolved: false,
-        replies: [{ id: id(), ...team, text: 'Sure, I’ll send you two options tomorrow.', createdAt: ago(18) }],
+        projectId: 'md-web', number: 1, device: 'desktop',
+        anchor: { x: 55, y: 136, vw: 1512, selector: hero, ox: 55.3, oy: 135.7, w: 1017, h: 256 },
+        ...client, text: 'Love the rotating word in the headline. Could it slow down a little?', createdAt: ago(20), resolved: false,
+        replies: [{ id: id(), ...team, text: 'Sure, we’ll try 3 seconds per word and share it tomorrow.', createdAt: ago(18) }],
       }),
       comment({
-        projectId: 'nile-web', number: 2, path: home, pageTitle: 'Nile Coffee — Slow coffee, Cairo', device: 'desktop',
-        anchor: { x: 0, y: 0, vw: 1512, selector: '#menu-grid', ox: 0, oy: 0, w: 1132, h: 310 },
-        ...client, text: 'These prices are from last year. We’ll send the new menu before launch.', createdAt: ago(6), resolved: false,
+        projectId: 'md-web', number: 2, device: 'desktop',
+        anchor: { x: 1180, y: 40, vw: 1512 },
+        ...client, text: 'Can “Get Detailed Proposal” open a short form instead of email?', createdAt: ago(6), resolved: false,
       }),
       comment({
-        projectId: 'nile-web', number: 3, path: story, pageTitle: 'Our story — Nile Coffee', device: 'desktop',
-        anchor: { x: 0, y: 0, vw: 1512, selector: '#story-photo', ox: 120, oy: 90 },
-        ...client, text: 'Please swap this for the new shop interior photo.', createdAt: ago(3), resolved: true, resolvedBy: 'Mark — Mitch Designs',
-      }),
-      comment({
-        projectId: 'nile-app', number: 1, path: home, pageTitle: 'Nile Coffee — Slow coffee, Cairo', device: 'mobile',
-        anchor: { x: 0, y: 0, vw: 430, selector: '#order-btn', ox: 40, oy: 12 },
-        ...client, text: 'On my phone this button is a bit hard to find, can it stick to the bottom?', createdAt: ago(5), resolved: false,
+        projectId: 'md-mobile', number: 1, device: 'mobile',
+        anchor: { x: 40, y: 260, vw: 430 },
+        ...client, text: 'On my phone the headline feels a bit big, can we scale it down?', createdAt: ago(5), resolved: false,
       }),
     ],
   };
@@ -162,10 +164,16 @@ const isDevice = (v: unknown): v is Device => v === 'desktop' || v === 'mobile';
 function toAdmin(p: DemoProject): ProjectAdmin {
   const { nextNumber: _n, ...rest } = p;
   const cs = store.comments.filter((c) => c.projectId === p.id);
-  return { ...rest, openComments: cs.filter((c) => !c.resolved).length, totalComments: cs.length };
+  return { ...rest, previewUrl: p.url, openComments: cs.filter((c) => !c.resolved).length, totalComments: cs.length };
 }
 
-const toPublic = (p: DemoProject): ProjectPublic => ({ name: p.name, device: p.device, allowComments: p.allowComments, lockDevice: p.lockDevice });
+const toPublic = (p: DemoProject): ProjectPublic => ({
+  name: p.name,
+  device: p.device,
+  allowComments: p.allowComments,
+  lockDevice: p.lockDevice,
+  previewUrl: p.url,
+});
 
 function toThread(c: DemoComment): CommentThread {
   return threads(c.projectId).find((t) => t.id === c.id)!;
@@ -322,7 +330,7 @@ export async function demoApi<T>(path: string, opts: { method?: string; body?: u
   throw new DemoError(404, 'Not found');
 }
 
-/** Resets the demo to its sample data. */
+/** Resets the demo to its sample projects and comments. */
 export function resetDemo() {
   store = seed();
   write(store);

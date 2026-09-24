@@ -101,7 +101,7 @@ function ProjectCard({ project: p, onOpen }: { project: ProjectAdmin; onOpen: ()
     >
       <div className="relative grid h-36 place-items-center overflow-hidden bg-spaceGrey">
         <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:14px_14px]" />
-        <DeviceGlyph device={p.device} token={p.shareToken} previewKey={p.previewKey} />
+        <DeviceGlyph project={p} />
         {!p.shareEnabled && (
           <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[11px] font-semibold text-white/80">Link off</span>
         )}
@@ -135,11 +135,12 @@ function ProjectCard({ project: p, onOpen }: { project: ProjectAdmin; onOpen: ()
   );
 }
 
-function DeviceGlyph({ device, token, previewKey }: { device: ProjectAdmin['device']; token: string; previewKey: string }) {
+function DeviceGlyph({ project }: { project: ProjectAdmin }) {
+  const { device } = project;
   const [iconOk, setIconOk] = useState(true);
   const icon = iconOk && (
     <img
-      src={faviconUrl(token, previewKey)}
+      src={faviconUrl(project)}
       alt=""
       onError={() => setIconOk(false)}
       className="size-8 rounded-md object-contain"
@@ -191,7 +192,7 @@ function DemoNotice() {
     <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-brand/50 bg-brand/10 px-4 py-3 text-sm">
       <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-foreground">Demo</span>
       <span className="text-foreground/80">
-        Every prototype here previews a sample website, and comments are saved in your browser only. The full version previews any link through a masked preview server.
+        Prototypes load the link you add. For pinned comments, the site needs one script line (the prototype shows it). Comments are saved in your browser only, and the link isn’t masked here. The full version handles both with its preview server.
       </span>
       <button onClick={reset} className="ml-auto text-xs font-semibold text-foreground/70 underline-offset-2 hover:text-foreground hover:underline">
         Reset demo
